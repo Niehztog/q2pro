@@ -82,6 +82,29 @@ extern bool Pickup_Health(edict_t *ent, edict_t *other);
 extern bool Pickup_Adrenaline(edict_t *ent, edict_t *other);
 extern bool Pickup_Armor(edict_t *ent, edict_t *other);
 extern bool Pickup_PowerArmor(edict_t *ent, edict_t *other);
+extern bool Pickup_Sphere(edict_t *ent, edict_t *other);
+
+// These dmflag filters choose which items may be substituted IN, so they test
+// the candidate item.  Ground Zero tested ent->classname -- the item being
+// replaced -- which is loop-invariant and the inverse of the intent: a disabled
+// sphere respawned as itself while everything else could still turn into one.
+// The rerelease tests the candidate too.  Both passes call this so that the
+// count pass and the pick pass cannot disagree on how many items are eligible.
+static bool SubstituteItemAllowed(const gitem_t *it)
+{
+    // don't respawn spheres if they're dmflag disabled.
+    if (((int)dmflags->value & DF_NO_SPHERES) && it->pickup == Pickup_Sphere)
+        return false;
+
+    if (((int)dmflags->value & DF_NO_NUKES) && !strcmp(it->classname, "ammo_nuke"))
+        return false;
+
+    if (((int)dmflags->value & DF_NO_MINES) &&
+        (!strcmp(it->classname, "ammo_prox") || !strcmp(it->classname, "ammo_tesla")))
+        return false;
+
+    return true;
+}
 
 char *FindSubstituteItem(edict_t *ent)
 {
@@ -148,20 +171,7 @@ char *FindSubstituteItem(edict_t *ent)
         if ((itflags & IT_AMMO) && (itflags & IT_WEAPON))
             itflags = IT_AMMO;
 
-        // don't respawn spheres if they're dmflag disabled.
-        if ((int)dmflags->value & DF_NO_SPHERES) {
-            if (!strcmp(ent->classname, "item_sphere_vengeance") ||
-                !strcmp(ent->classname, "item_sphere_hunter") ||
-                !strcmp(ent->classname, "item_spehre_defender")) {
-                continue;
-            }
-        }
-
-        if (((int)dmflags->value & DF_NO_NUKES) && !strcmp(ent->classname, "ammo_nuke"))
-            continue;
-
-        if (((int)dmflags->value & DF_NO_MINES) &&
-            (!strcmp(ent->classname, "ammo_prox") || !strcmp(ent->classname, "ammo_tesla")))
+        if (!SubstituteItemAllowed(it))
             continue;
 
         if ((itflags & IT_TYPE_MASK) == (myflags & IT_TYPE_MASK))
@@ -186,11 +196,7 @@ char *FindSubstituteItem(edict_t *ent)
         if ((itflags & IT_AMMO) && (itflags & IT_WEAPON))
             itflags = IT_AMMO;
 
-        if (((int)dmflags->value & DF_NO_NUKES) && !strcmp(ent->classname, "ammo_nuke"))
-            continue;
-
-        if (((int)dmflags->value & DF_NO_MINES) &&
-            (!strcmp(ent->classname, "ammo_prox") || !strcmp(ent->classname, "ammo_tesla")))
+        if (!SubstituteItemAllowed(it))
             continue;
 
         if ((itflags & IT_TYPE_MASK) == (myflags & IT_TYPE_MASK)) {
@@ -306,7 +312,7 @@ void body_think(edict_t *self)
 {
     float r;
 
-    if (abs(self->ideal_yaw - anglemod(self->s.angles[YAW])) < 2) {
+    if (fabsf(self->ideal_yaw - anglemod(self->s.angles[YAW])) < 2) {
         if (self->timestamp < level.framenum) {
             r = random();
             if (r < 0.10f) {

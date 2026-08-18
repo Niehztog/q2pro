@@ -260,7 +260,7 @@ Draw instead of help message.
 Note that it isn't that hard to overflow the 1400 byte message limit!
 ==================
 */
-static void DeathmatchScoreboard(edict_t *ent)
+void DeathmatchScoreboard(edict_t *ent)
 {
     DeathmatchScoreboardMessage(ent, ent->enemy);
     gi.unicast(ent, true);

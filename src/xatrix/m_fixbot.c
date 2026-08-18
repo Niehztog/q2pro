@@ -214,6 +214,9 @@ static void roam_goal(edict_t *self)
     vec3_t      vec;
     vec3_t      whichvec;
 
+    // if every trace comes back zero length nothing below sets whichvec
+    VectorCopy(self->s.origin, whichvec);
+
     ent = G_Spawn();
     ent->classname = "bot_goal";
     ent->solid = SOLID_BBOX;

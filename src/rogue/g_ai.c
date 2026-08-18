@@ -634,7 +634,7 @@ bool FacingIdeal(edict_t *self)
 bool M_CheckAttack(edict_t *self)
 {
     vec3_t  spot1, spot2;
-    float   chance;
+    float   chance = 0;
     trace_t tr;
 
     if (self->enemy->health > 0) {
@@ -858,7 +858,7 @@ static void ai_run_slide(edict_t *self, float distance)
     }
     */
     // PMM - clamp maximum sideways move for non flyers to make them look less jerky
-    if (!self->flags & FL_FLY)
+    if (!(self->flags & FL_FLY))
         distance = min(distance, MAX_SIDESTEP);
     if (M_walkmove(self, self->ideal_yaw + ofs, distance))
         return;

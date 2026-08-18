@@ -519,7 +519,7 @@ bool Jorg_CheckAttack(edict_t *self)
 {
     vec3_t  spot1, spot2;
     vec3_t  temp;
-    float   chance;
+    float   chance = 0;
     trace_t tr;
     int         enemy_range;
     float       enemy_yaw;

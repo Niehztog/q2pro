@@ -326,7 +326,7 @@ static void TurretFire(edict_t *self)
     vec3_t  start, end, dir;
     float   time, dist, chance;
     trace_t trace;
-    int     rocketSpeed;
+    int     rocketSpeed = 0;
 
     TurretAim(self);
 
@@ -413,8 +413,8 @@ static void TurretFireBlind(edict_t *self)
 {
     vec3_t  forward;
     vec3_t  start, end, dir;
-    float   chance;
-    int     rocketSpeed;
+    float   chance = 0;
+    int     rocketSpeed = 0;
 
     TurretAim(self);
 
@@ -677,6 +677,7 @@ void turret_activate(edict_t *self, edict_t *other, edict_t *activator)
     self->moveinfo.accel = self->speed;
     self->moveinfo.decel = self->speed;
 
+    VectorClear(forward);
     if (self->s.angles[0] == 270) {
         VectorSet(forward, 0, 0, 1);
     } else if (self->s.angles[0] == 90) {

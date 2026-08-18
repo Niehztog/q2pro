@@ -109,7 +109,7 @@ static bool stalker_ok_to_transition(edict_t *self)
 //      gi.dprintf("stalker_check_pt: absmin/absmin failed\n");
         return false;
     }
-    if (abs(end_height + margin - trace.endpos[2]) > 8)
+    if (fabsf(end_height + margin - trace.endpos[2]) > 8)
         return false;
 
     pt[0] = self->absmax[0];
@@ -121,7 +121,7 @@ static bool stalker_ok_to_transition(edict_t *self)
 //      gi.dprintf("stalker_check_pt: absmax/absmin failed\n");
         return false;
     }
-    if (abs(end_height + margin - trace.endpos[2]) > 8)
+    if (fabsf(end_height + margin - trace.endpos[2]) > 8)
         return false;
 
     pt[0] = self->absmax[0];
@@ -133,7 +133,7 @@ static bool stalker_ok_to_transition(edict_t *self)
 //      gi.dprintf("stalker_check_pt: absmax/absmax failed\n");
         return false;
     }
-    if (abs(end_height + margin - trace.endpos[2]) > 8)
+    if (fabsf(end_height + margin - trace.endpos[2]) > 8)
         return false;
 
     pt[0] = self->absmin[0];
@@ -145,7 +145,7 @@ static bool stalker_ok_to_transition(edict_t *self)
 //      gi.dprintf("stalker_check_pt: absmin/absmax failed\n");
         return false;
     }
-    if (abs(end_height + margin - trace.endpos[2]) > 8)
+    if (fabsf(end_height + margin - trace.endpos[2]) > 8)
         return false;
 
     return true;
@@ -630,10 +630,10 @@ static void calcJumpAngle(vec3_t start, vec3_t end, float velocity, vec3_t angle
         one = one - (float)sinf(U);
         //  one = ((l * FAUX_GRAVITY * (cosU * cosU)) / (velocity * velocity)) - (float)sinf(U);
         angles[0] = (float)asinf(one);
-        if (_isnan(angles[0]))
+        if (isnan(angles[0]))
             angles[2] = 1.0f;
         angles[1] = (float)M_PI - angles[0];
-        if (_isnan(angles[1]))
+        if (isnan(angles[1]))
             angles[2] = 1.0f;
 
         angles[0] = RAD2DEG((angles[0] - U) / 2.0f);
@@ -646,10 +646,10 @@ static void calcJumpAngle(vec3_t start, vec3_t end, float velocity, vec3_t angle
         one = l * FAUX_GRAVITY;
         one = one / (velocity * velocity);
         angles[0] = (float)asinf(one);
-        if (_isnan(angles[0]))
+        if (isnan(angles[0]))
             angles[2] = 1.0f;
         angles[1] = (float)M_PI - angles[0];
-        if (_isnan(angles[1]))
+        if (isnan(angles[1]))
             angles[2] = 1.0f;
 
         angles[0] = RAD2DEG((angles[0]) / 2.0f);
@@ -723,7 +723,7 @@ static int stalker_do_pounce(edict_t *self, vec3_t dest)
 
     // make sure we're pointing in that direction 15deg margin of error.
     vectoangles2(dist, jumpAngles);
-    if (abs(jumpAngles[YAW] - self->s.angles[YAW]) > 45)
+    if (fabsf(jumpAngles[YAW] - self->s.angles[YAW]) > 45)
         return false;           // not facing the player...
 
     self->ideal_yaw = jumpAngles[YAW];
@@ -752,13 +752,13 @@ static int stalker_do_pounce(edict_t *self, vec3_t dest)
     // find a valid angle/velocity combination
     while (velocity <= 800) {
         calcJumpAngle(self->s.origin, jumpLZ, velocity, jumpAngles);
-        if ((!_isnan(jumpAngles[0]))  || (!_isnan(jumpAngles[1])))
+        if ((!isnan(jumpAngles[0]))  || (!isnan(jumpAngles[1])))
             break;
 
         velocity += 200;
     };
 
-    if (!preferHighJump && (!_isnan(jumpAngles[0]))) {
+    if (!preferHighJump && (!isnan(jumpAngles[0]))) {
         AngleVectors(self->s.angles, forward, right, NULL);
         VectorNormalize(forward) ;
 
@@ -770,7 +770,7 @@ static int stalker_do_pounce(edict_t *self, vec3_t dest)
         return 1;
     }
 
-    if (!_isnan(jumpAngles[1])) {
+    if (!isnan(jumpAngles[1])) {
         AngleVectors(self->s.angles, forward, right, NULL);
         VectorNormalize(forward) ;
 

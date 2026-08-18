@@ -822,7 +822,7 @@ PlayersRangeFromSpot
 Returns the distance to the nearest player from the given spot
 ================
 */
-static float PlayersRangeFromSpot(edict_t *spot)
+float PlayersRangeFromSpot(edict_t *spot)
 {
     edict_t *player;
     float   bestplayerdistance;

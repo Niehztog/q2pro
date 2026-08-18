@@ -2853,7 +2853,7 @@ void SP_xatrix_item(edict_t *self)
 {
     const gitem_t   *item;
     int     i;
-    char    *spawnClass;
+    char    *spawnClass = NULL;
 
     if (!self->classname)
         return;
@@ -2863,7 +2863,7 @@ void SP_xatrix_item(edict_t *self)
     else if (!strcmp(self->classname, "ammo_trap"))
         spawnClass = "weapon_proxlauncher";
     else if (!strcmp(self->classname, "item_quadfire")) {
-        float   chance;
+        float   chance = 0;
 
         chance = random();
         if (chance < 0.2f)
@@ -2876,6 +2876,9 @@ void SP_xatrix_item(edict_t *self)
         spawnClass = "weapon_etf_rifle";
     else if (!strcmp(self->classname, "weapon_phalanx"))
         spawnClass = "weapon_plasmabeam";
+
+    if (!spawnClass)
+        return;
 
     // check item spawn functions
     for (i = 0, item = itemlist; i < game.num_items; i++, item++) {

@@ -43,16 +43,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 //==================================================================
 
-#ifndef _WIN32
-#include <nan.h>
-#define min(a,b) ((a) < (b) ? (a) : (b))
-#define max(a,b) ((a) > (b) ? (a) : (b))
-#ifdef __sun__
-#define _isnan(a) (NaN((a)))
-#else
-#define _isnan(a) ((a)==NAN)
-#endif
-#endif
+// min()/max() and isnan() now come from the engine headers
 
 //==================================================================
 

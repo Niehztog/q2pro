@@ -554,7 +554,7 @@ static void floater_zap(edict_t *self)
 
 void floater_attack(edict_t *self)
 {
-    float chance;
+    float chance = 0;
     // 0% chance of circle in easy
     // 50% chance in normal
     // 75% chance in hard

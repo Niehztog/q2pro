@@ -331,7 +331,7 @@ EndDMLevel
 The timelimit or fraglimit has been exceeded
 =================
 */
-static void EndDMLevel(void)
+void EndDMLevel(void)
 {
     edict_t     *ent;
     char *s, *t, *f;

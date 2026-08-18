@@ -194,7 +194,7 @@ static bool SV_movestep(edict_t *ent, vec3_t move, bool relink)
     float       stepsize;
     vec3_t      test;
     int         contents;
-    edict_t     *current_bad;       // PGM
+    edict_t     *current_bad = NULL;    // PGM
     float       minheight;          // pmm
 
 //======
@@ -429,7 +429,7 @@ static bool SV_movestep(edict_t *ent, vec3_t move, bool relink)
 //                          gi.dprintf ("I don't have a valid enemy, attacking tesla!\n");
                         TargetTesla(ent, new_bad->owner);
                         ent->monsterinfo.aiflags |= AI_BLOCKED;
-                    } else if (!strcmp(ent->enemy->classname, "telsa")) {
+                    } else if (!strcmp(ent->enemy->classname, "tesla")) {
 //                      if ((g_showlogic) && (g_showlogic->value))
 //                          gi.dprintf ("but we're already mad at a tesla\n");
                     } else if ((ent->enemy) && (ent->enemy->client)) {

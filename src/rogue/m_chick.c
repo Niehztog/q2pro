@@ -494,7 +494,7 @@ static void ChickRocket(edict_t *self)
     vec3_t  dir;
     vec3_t  vec;
     trace_t trace;  // PMM - check target
-    int     rocketSpeed;
+    int     rocketSpeed = 0;
     float   dist;
     // pmm - blindfire
     vec3_t  target;

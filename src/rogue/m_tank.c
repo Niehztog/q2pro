@@ -742,7 +742,7 @@ void tank_attack(edict_t *self)
     float   range;
     float   r;
     // PMM
-    float   chance;
+    float   chance = 0;
 
     // PMM
     if (!self->enemy || !self->enemy->inuse)

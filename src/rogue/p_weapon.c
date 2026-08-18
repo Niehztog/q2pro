@@ -1677,7 +1677,7 @@ void Weapon_ChainFist(edict_t *ent)
     // these are caches for the sound index. there's probably a better way to do this.
 //  static int  idle_index;
 //  static int  attack_index;
-    float       chance;
+    float       chance = 0;
     int         last_sequence;
 
     last_sequence = 0;

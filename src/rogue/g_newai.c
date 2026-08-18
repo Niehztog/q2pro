@@ -479,7 +479,7 @@ bool monsterlost_checkhint(edict_t *self)
     edict_t     *closest;
     float       closest_range = 1000000;
     edict_t     *start, *destination;
-    int         count1 = 0, count2 = 0, count4 = 0, count5 = 0;
+    int         count5 = 0;
     float       r;
     int         i;
     bool    hint_path_represented[MAX_HINT_CHAINS];
@@ -505,7 +505,6 @@ bool monsterlost_checkhint(edict_t *self)
     for (i = 0; i < num_hint_paths; i++) {
         e = hint_path_start[i];
         while (e) {
-            count1++;
             if (e->monster_hint_chain) {
 //              gi.dprintf ("uh, oh, I didn't clean up after myself\n");
                 e->monster_hint_chain = NULL;
@@ -531,7 +530,6 @@ bool monsterlost_checkhint(edict_t *self)
 //          count3++;
 
         if (r > 512) {
-            count2++;
 //          if (g_showlogic && g_showlogic->value)
 //          {
 //              gi.dprintf ("MONSTER (%s) DISTANCE:  ", self->classname);
@@ -559,7 +557,6 @@ bool monsterlost_checkhint(edict_t *self)
             }
         }
         if (!visible(self, e)) {
-            count4++;
 //          if (g_showlogic && g_showlogic->value)
 //          {
 //              gi.dprintf ("MONSTER (%s) VISIBILITY:  ", self->classname);
@@ -626,9 +623,6 @@ bool monsterlost_checkhint(edict_t *self)
         e = e->monster_hint_chain;
     }
 
-    count1 = 0;
-    count2 = 0;
-    count4 = 0;
     count5 = 0;
 
     // now, build the target_pathchain which contains all of the hint_path nodes we need to check for
@@ -663,7 +657,6 @@ bool monsterlost_checkhint(edict_t *self)
 //          count3++;
 
         if (r > 512) {
-            count2++;
 //          if (g_showlogic && g_showlogic->value)
 //          {
 //              gi.dprintf ("TARGET RANGE:  ");
@@ -689,7 +682,6 @@ bool monsterlost_checkhint(edict_t *self)
             }
         }
         if (!visible(self->enemy, e)) {
-            count4++;
 //          if (g_showlogic && g_showlogic->value)
 //          {
 //              gi.dprintf ("TARGET VISIBILITY:  ");
@@ -928,7 +920,7 @@ bool monsterlost_checkhint2 (edict_t *self)
 // =============
 void hint_path_touch(edict_t *self, edict_t *other, cplane_t *plane, csurface_t *surf)
 {
-    edict_t     *e, *goal, *next;
+    edict_t     *e, *goal, *next = NULL;
 //  int         chain;           // direction - (-1) = upstream, (1) = downstream, (0) = done
     bool    goalFound = false;
 
@@ -1126,7 +1118,7 @@ void SP_hint_path(edict_t *self)
 void InitHintPaths(void)
 {
     edict_t     *e, *current;
-    int         field, i, count2;
+    int         field, i;
 
     hint_paths_present = 0;
 
@@ -1164,7 +1156,6 @@ void InitHintPaths(void)
 
     field = FOFS(targetname);
     for (i = 0; i < num_hint_paths; i++) {
-        count2 = 1;
         current = hint_path_start[i];
         current->hint_chain_id = i;
 //      gi.dprintf ("start ");
@@ -1173,7 +1164,6 @@ void InitHintPaths(void)
             gi.dprintf("\nForked hint path at %s detected for chain %d, target %s\n",
                        vtos(current->s.origin), num_hint_paths, current->target);
             hint_path_start[i]->hint_chain = NULL;
-            count2 = 0;
             continue;
         }
         while (e) {
@@ -1181,10 +1171,8 @@ void InitHintPaths(void)
                 gi.dprintf("\nCircular hint path at %s detected for chain %d, targetname %s\n",
                            vtos(e->s.origin), num_hint_paths, e->targetname);
                 hint_path_start[i]->hint_chain = NULL;
-                count2 = 0;
                 break;
             }
-            count2++;
             current->hint_chain = e;
             current = e;
             current->hint_chain_id = i;
@@ -1196,7 +1184,6 @@ void InitHintPaths(void)
                 gi.dprintf("\nForked hint path at %s detected for chain %d, target %s\n",
                            vtos(current->s.origin), num_hint_paths, current->target);
                 hint_path_start[i]->hint_chain = NULL;
-                count2 = 0;
                 break;
             }
         }

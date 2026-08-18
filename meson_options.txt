@@ -190,3 +190,10 @@ option('zlib',
   type: 'feature',
   value: 'auto',
   description: 'zlib support')
+
+option('mission-packs',
+  type: 'array',
+  choices: ['ctf', 'xatrix', 'rogue'],
+  value: ['ctf', 'xatrix', 'rogue'],
+  description: 'Mission pack game libraries to build'
+)

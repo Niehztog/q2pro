@@ -443,16 +443,55 @@ executable('q2proded', common_src, server_src,
   install:               system_wide,
 )
 
+# 'inc' for the engine headers, '.' so subdir targets still find config.h
+engine_inc = include_directories('inc', '.')
+
+# sources every game library needs, whichever mod it implements
+game_shared_src = files(
+  'src/shared/m_flash.c',
+  'src/shared/shared.c',
+)
+
+# pm_time has no fixed unit -- 8ms per unit on a plain server, 1ms once
+# protocol extensions are negotiated -- so a duration written into it has
+# to go through PM_TIME_SHIFT.  Nothing in the type says which unit a site
+# is in, so the contract can only be checked as text; see the script.  It
+# scans every game library and the engine pmove regardless of which mission
+# packs this build selected, and runs its own control first, so a change
+# that stops it finding anything fails here too.  Stale on every build and
+# depended on by nothing, so it cannot make a library relink.
+custom_target('pm-time-check',
+  command:            [find_program('python3'), files('pm_time_check.py'),
+                       '--self-test'],
+  output:             'pm-time-control.stamp',
+  capture:            true,
+  build_by_default:   true,
+  build_always_stale: true,
+)
+
+custom_target('pm-time-shift',
+  command:            [find_program('python3'), files('pm_time_check.py')],
+  output:             'pm-time-shift.stamp',
+  capture:            true,
+  build_by_default:   true,
+  build_always_stale: true,
+)
+
 shared_library('game' + cpu, game_src,
   name_prefix:           '',
   dependencies:          game_deps,
-  include_directories:   'inc',
+  include_directories:   engine_inc,
   gnu_symbol_visibility: 'hidden',
   link_args:             dll_link_args,
   install:               system_wide,
   install_dir:           libdir / get_option('base-game'),
   override_options:      get_option('game-build-options'),
 )
+
+# Mission pack game libraries, built from the same engine headers.
+foreach pack : get_option('mission-packs')
+  subdir('src' / pack)
+endforeach
 
 config.set('REVISION',            meson.project_version().substring(1).split('~')[0].to_int())
 config.set_quoted('VERSION',      meson.project_version())

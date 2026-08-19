@@ -1,3 +1,25 @@
+Mission packs branch
+====================
+
+This branch (`feature/mission-packs`) adds three more game libraries alongside
+`baseq2`: **Threewave Capture The Flag**, **The Reckoning** (Xatrix) and
+**Ground Zero** (Rogue).
+
+They are not fresh ports. Each was imported from its last official source
+release and then had *every* commit Q2PRO has ever made to the `baseq2` game
+source replayed on top of it, so all three carry the same modernised game API,
+savegame system, frame-number timers and accumulated bug fixes as `baseq2` —
+and build clean with `-Werror` next to it.
+
+* [doc/mission-packs.md](doc/mission-packs.md) — what was imported from where,
+  how the replay was performed, and the deviations worth knowing about.
+
+Build them with the `mission-packs` meson option (all three are on by default):
+
+    meson setup builddir -Dmission-packs=ctf,xatrix,rogue
+
+---
+
 Q2PRO
 =====
 

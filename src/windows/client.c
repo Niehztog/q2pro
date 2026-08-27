@@ -606,6 +606,28 @@ static void legacy_key_event(WPARAM wParam, LPARAM lParam, bool down)
     Key_Event2(result, down, win.lastMsgTime);
 }
 
+// Characters are reported by the system in the user's keyboard layout, while
+// key numbers above are derived from layout independent scancodes.
+static void char_event(WPARAM wParam, LPARAM lParam)
+{
+    int scancode = (lParam >> 16) & 255;
+    int extended = (lParam >> 24) & 1;
+
+    // keypad characters are translated by Key_Event() from the key number,
+    // since they don't depend on the layout. don't report them twice.
+    if (extended) {
+        if (scancode == 0x35)
+            return;                                     // divide
+    } else {
+        if (scancode == 0x37)
+            return;                                     // multiply
+        if (scancode >= 0x47 && scancode <= 0x53)
+            return;                                     // 7 ... del
+    }
+
+    Key_CharEvent((int)wParam);
+}
+
 static void mouse_wheel_event(int delta)
 {
     UINT lines, key;
@@ -861,8 +883,11 @@ static LRESULT WINAPI Win_MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         legacy_key_event(wParam, lParam, false);
         return FALSE;
 
-    case WM_SYSCHAR:
     case WM_CHAR:
+        char_event(wParam, lParam);
+        return FALSE;
+
+    case WM_SYSCHAR:
         return FALSE;
 
     case WM_ERASEBKGND:
@@ -897,8 +922,21 @@ void Win_PumpEvents(void)
             Com_Quit(NULL, ERR_DISCONNECT);
             break;
         }
-        TranslateMessage(&msg);
+
+        // Dispatch a key press before translating it, so that only keys the
+        // engine didn't claim as a command reach the keyboard layout.  The
+        // console key is a dead key on some layouts (German '^' sits where it
+        // is), and translating it would leave that dead key armed to prepend
+        // itself to the next character typed.
+        bool down = msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN;
+
+        if (!down)
+            TranslateMessage(&msg);
+
         DispatchMessage(&msg);
+
+        if (down && Key_WantCharEvent())
+            TranslateMessage(&msg);
     }
 
     if (win.mode_changed) {

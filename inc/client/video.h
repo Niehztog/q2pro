@@ -40,6 +40,10 @@ typedef struct {
     char *(*get_clipboard_data)(void);
     void (*set_clipboard_data)(const char *data);
 
+    // set if the driver reports layout aware characters via Key_CharEvent(),
+    // in which case Key_Event() doesn't synthesize them from key numbers
+    bool char_events;
+
     bool (*init_mouse)(void);
     void (*shutdown_mouse)(void);
     void (*grab_mouse)(bool grab);

@@ -197,6 +197,8 @@ const vid_driver_t vid_win32egl = {
     .get_clipboard_data = Win_GetClipboardData,
     .set_clipboard_data = Win_SetClipboardData,
 
+    .char_events = true,
+
     .init_mouse = Win_InitMouse,
     .shutdown_mouse = Win_ShutdownMouse,
     .grab_mouse = Win_GrabMouse,

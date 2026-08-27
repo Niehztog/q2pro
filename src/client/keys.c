@@ -40,6 +40,16 @@ static byte     buttondown[256 / 8];
 
 static bool     key_overstrike;
 
+// set when the last key down event was consumed by the engine, so that a
+// character event generated from it by the video driver gets dropped
+static bool     key_dropchar;
+
+// use characters reported by the video driver in the system keyboard layout,
+// rather than synthesizing them from key numbers using the built-in US layout
+static bool     key_charevents = true;
+
+static cvar_t   *in_charevents;
+
 typedef struct {
     const char  *name;
     int         keynum;
@@ -495,6 +505,11 @@ static const cmdreg_t c_keys[] = {
     { NULL }
 };
 
+static void in_charevents_changed(cvar_t *self)
+{
+    key_charevents = self->integer;
+}
+
 /*
 ===================
 Key_Init
@@ -594,9 +609,29 @@ void Key_Init(void)
     keyshift['\\'] = '|';
 
 //
-// register our functions
+// register our variables and functions
 //
+    in_charevents = Cvar_Get("in_charevents", "1", 0);
+    in_charevents->changed = in_charevents_changed;
+    in_charevents_changed(in_charevents);
+
     Cmd_Register(c_keys);
+}
+
+static void Key_DispatchChar(int key)
+{
+    // only printable characters are supported
+    if (key < 32 || key >= 127) {
+        return;
+    }
+
+    if (cls.key_dest & KEY_CONSOLE) {
+        Char_Console(key);
+    } else if (cls.key_dest & KEY_MENU) {
+        UI_CharEvent(key);
+    } else if (cls.key_dest & KEY_MESSAGE) {
+        Char_Message(key);
+    }
 }
 
 /*
@@ -616,6 +651,13 @@ void Key_Event(unsigned key, bool down, unsigned time)
 
     Com_DDDPrintf("%u: %c%s\n", time,
                   down ? '+' : '-', Key_KeynumToString(key));
+
+    // assume this key press is consumed until proven otherwise, so that
+    // drivers reporting their own character events don't leak the character
+    // of a key that was handled as a command here (the console key, etc)
+    if (down) {
+        key_dropchar = true;
+    }
 
     // hack for menu key binding
     if (key_wait_cb && down && !key_wait_cb(key_wait_arg, key)) {
@@ -769,9 +811,16 @@ void Key_Event(unsigned key, bool down, unsigned time)
         Key_Message(key);
     }
 
+    // this key press may produce text
+    key_dropchar = false;
+
     if (Key_IsDown(K_CTRL) || Key_IsDown(K_ALT)) {
         return;
     }
+
+    // keypad keys are not affected by the keyboard layout, so they are always
+    // translated here
+    bool keypad = true;
 
     switch (key) {
     case K_KP_SLASH:
@@ -819,10 +868,13 @@ void Key_Event(unsigned key, bool down, unsigned time)
     case K_KP_DEL:
         key = '.';
         break;
+    default:
+        keypad = false;
+        break;
     }
 
-    // if key is printable, generate char events
-    if (key < 32 || key >= 127) {
+    // let the video driver report characters in the user's keyboard layout
+    if (!keypad && key_charevents && vid && vid->char_events) {
         return;
     }
 
@@ -830,13 +882,45 @@ void Key_Event(unsigned key, bool down, unsigned time)
         key = keyshift[key];
     }
 
-    if (cls.key_dest & KEY_CONSOLE) {
-        Char_Console(key);
-    } else if (cls.key_dest & KEY_MENU) {
-        UI_CharEvent(key);
-    } else if (cls.key_dest & KEY_MESSAGE) {
-        Char_Message(key);
+    Key_DispatchChar(key);
+}
+
+/*
+===================
+Key_WantCharEvent
+
+Whether the key press last passed to Key_Event() may still produce text.  Video
+drivers use this to keep a key the engine claimed as a command out of the system
+keyboard layout: feeding it to the layout would leave a dead key armed, and it
+would prepend itself to whatever is typed next.
+===================
+*/
+bool Key_WantCharEvent(void)
+{
+    return !key_dropchar;
+}
+
+/*
+===================
+Key_CharEvent
+
+Called by the video driver with a character produced by the system keyboard
+layout. Key_Event() synthesizes characters from key numbers using the built-in
+US layout instead when the driver doesn't report them.
+===================
+*/
+void Key_CharEvent(int key)
+{
+    if (!key_charevents) {
+        return;
     }
+
+    // don't type the character of a key press we already acted upon
+    if (key_dropchar) {
+        return;
+    }
+
+    Key_DispatchChar(key);
 }
 
 /*

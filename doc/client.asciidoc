@@ -1100,6 +1100,19 @@ loc_draw::
     Enables visualization of location positions. Default value is 0 (disabled).
 
 
+Keyboard Input
+~~~~~~~~~~~~~~
+
+in_charevents::
+    Specifies whether text typed into the console, chat prompt and menu input
+    fields uses the system keyboard layout. Default value is 1 (enabled).
+    Setting this to 0 falls back to the built-in US layout, which is useful with
+    layouts that don't produce ASCII characters, such as Cyrillic ones. Key
+    bindings are always layout independent and not affected by this variable.
+    Currently only the Windows video drivers report characters in the system
+    keyboard layout.
+
+
 Mouse Input
 ~~~~~~~~~~~
 

@@ -449,19 +449,26 @@ static void win_noalttab_changed(cvar_t *self)
     }
 }
 
-static void Win_Activate(WPARAM wParam)
+// Activation is handled from Win_PumpEvents(), not directly from WM_ACTIVATE.
+// Clicking the title bar activates the window before DefWindowProc() enters the
+// modal move loop, and grabbing the mouse in between would clip the cursor to
+// the client area and recenter it, making the window impossible to drag.
+static void activate_event(WPARAM wParam)
 {
-    active_t active;
-
     if (HIWORD(wParam)) {
         // we don't want to act like we're active if we're minimized
-        active = ACT_MINIMIZED;
+        win.pending_active = ACT_MINIMIZED;
     } else if (LOWORD(wParam)) {
-        active = ACT_ACTIVATED;
+        win.pending_active = ACT_ACTIVATED;
     } else {
-        active = ACT_RESTORED;
+        win.pending_active = ACT_RESTORED;
     }
 
+    win.activate_pending = true;
+}
+
+static void Win_Activate(active_t active)
+{
     CL_Activate(active);
 
     if (win_noalttab->integer) {
@@ -844,7 +851,7 @@ static LRESULT WINAPI Win_MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
         return FALSE;
 
     case WM_ACTIVATE:
-        Win_Activate(wParam);
+        activate_event(wParam);
         break;
 
     case WM_WINDOWPOSCHANGING:
@@ -953,6 +960,13 @@ void Win_PumpEvents(void)
             Win_ModeChanged();
         }
         win.mode_changed = 0;
+    }
+
+    // this may grab the mouse, so do it once the window geometry is up to date
+    // and any modal move/size loop above has finished
+    if (win.activate_pending) {
+        win.activate_pending = false;
+        Win_Activate(win.pending_active);
     }
 }
 

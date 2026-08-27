@@ -85,6 +85,11 @@ typedef struct {
     DWORD   lastMsgTime;
     HHOOK   kbdHook;
 
+    // activation is deferred until the message queue is drained, so that the
+    // modal loop of a title bar drag isn't entered with the mouse grabbed
+    active_t pending_active;
+    bool    activate_pending;
+
     vidFlags_t flags;
 
     SHORT   gamma_cust[3][256];

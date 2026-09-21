@@ -182,7 +182,10 @@ void G_UseTargets(edict_t *ent, edict_t *activator)
 //
 // print the message
 //
-    if ((ent->message) && !(activator->svflags & SVF_MONSTER)) {
+    // the activator is legitimately NULL on some paths -- the delay arm above
+    // warns about exactly that -- and target_explosion_explode calls back in
+    // here with the one a func_clock or a reversing func_door handed it
+    if ((ent->message) && activator && !(activator->svflags & SVF_MONSTER)) {
         gi.centerprintf(activator, "%s", ent->message);
         if (ent->noise_index)
             gi.sound(activator, CHAN_AUTO, ent->noise_index, 1, ATTN_NORM, 0);

@@ -362,6 +362,19 @@ void T_Damage(edict_t *targ, edict_t *inflictor, edict_t *attacker, const vec3_t
     if (!targ->takedamage)
         return;
 
+    // an attacker is an edict, never NULL, and this is where that becomes true.
+    // nothing ever assigns activator on a func_door, and a func_clock that is
+    // not START_OFF never has one either; both hand what they hold to
+    // G_UseTargets, which passes it on to a targeted target_explosion, which
+    // uses it as the attacker of its radius damage. id's own code survives that
+    // by accident: its single attacker->client read sits behind
+    // !(dflags & DAMAGE_RADIUS), which short-circuits on exactly the path that
+    // produces the NULL. Answering it once here rather than at each read keeps
+    // the fix from growing with every read added below, and world->client is
+    // NULL, so every attacker->client test still means what no attacker meant.
+    if (!attacker)
+        attacker = world;
+
     // easy mode takes half damage
     if (skill->value == 0 && deathmatch->value == 0 && targ->client) {
         damage *= 0.5f;

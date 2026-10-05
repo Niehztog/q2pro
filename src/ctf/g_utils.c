@@ -369,6 +369,21 @@ void G_FreeEdict(edict_t *ed)
         return;
     }
 
+    // a hook in flight that blocks a door, plat or train is handed to
+    // BecomeExplosion1 and freed here without passing CTFResetGrapple, so its
+    // owner would keep pointing at the zeroed edict and the next ClientThink's
+    // CTFGrapplePull would read its NULL owner. the hook keeps G_Spawn's
+    // "noclass", so the owner's own pointer is what identifies it. leave the
+    // owner as CTFResetGrapple does, without the sound.
+    if (ed->owner && ed->owner->client && ed->owner->client->ctf_grapple == ed) {
+        gclient_t *cl = ed->owner->client;
+
+        cl->ctf_grapple = NULL;
+        cl->ctf_grapplereleasetime = level.time;
+        cl->ctf_grapplestate = CTF_GRAPPLE_STATE_FLY;
+        cl->ps.pmove.pm_flags &= ~PMF_NO_PREDICTION;
+    }
+
     memset(ed, 0, sizeof(*ed));
     ed->classname = "freed";
     ed->freetime = level.time;
